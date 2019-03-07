@@ -95,10 +95,10 @@ It's "shape" is almost like a To-Do list:
 
 ```text
 * Get items
-* Join half of the items with each other
-* Join the other halves of the items together
+* Join argument 0 with argument 2 (bread1 and peanut_butter)
+* Join argument 1 with argument 3 (bread2 and jelly)
 * Join the two previous steps' outputs together
-* Viol&agrave;
+* Violà: All done
 ```
 
 "Shape" is a pretty fuzzy term, but it's the mental "image" of "what the code
@@ -108,77 +108,38 @@ the..._character_ of the code. Detecting when the "shape" makes a radical
 departure at an _intuitive_ level can be a valuable signal that (maybe) your
 implementation is taking a bad turn.
 
-But now let's suppose the inputs change slightly. For each PBJ, we now get a
-_loaf_ of bread _instead of_ two slices. We must make our PBJ on two equally
-cut slices of bread from the loaf we are given.
+## When Shape Goes Wrong
 
-Let's update our code:
+But now let's suppose the inputs change slightly.
 
 ```ruby
-# GIVEN CODE
-#
-# Required to make the Ruby work.
-require 'ostruct'
-demo_loaf = OpenStruct.new(:type => "light rye", :length => 60)
-# (end GIVEN CODE)
-
-def make_pbj_sandwich(loaf, peanut_butter, jelly, slice_width)
-  slices = []
-  slices_count = loaf.length / slice_width
-  slices_count.times do
-    slices << "slice of #{loaf.type}"
-  end
-
-  if slices.length >= 2
-    bread1 = slices.shift # one less slice in slices
-    bread2 = slices.shift # one less slice in slices
-
-    # Join ingredients
-    puts "You join #{bread1} and #{peanut_butter}"
-    side1 = "#{peanut_butter} on #{bread1}"
-
-    # Join ingredients
-    puts "You join #{bread2} and #{jelly}"
-    side2 = "#{jelly} on #{bread2}"
-
-    # Join ingredient on bread
-    puts "You join #{side1} with #{side2}"
-    "A #{peanut_butter} and #{jelly} sandwich"
-  else
-    puts "Sorry we don't have enough bread to make a PBJ!"
-  end
-end
-
-make_pbj_sandwich(demo_loaf, "crunchy monkey brand peanut butter", "Belgian forest-berry", 2)
-
-#=> You join slice of light rye and crunchy monkey brand peanut butter
-#=> You join slice of light rye and Belgian forest-berry
-#=> You join crunchy monkey brand peanut butter on slice of light rye with Belgian forest-berry on slice of light rye
-
+def make_pbj_sandwich(loaf_of_bread, peanut_butter, jelly)
 ```
 
-Wow! Look at that, to add a little intelligence around working with a loaf
-instead of two slices, our code lost a lot of its readability!  The new code is
-confusing the core activity of the method which used to be there.
-
-The "shape" is different. While it *should* still be like the To-Do list that
-it once was, the shape has become:
+For each PBJ, we now get a _loaf_ of bread _instead of_ two slices. We must make our PBJ on two equally
+cut slices of bread from the loaf we are given. Let's pseudocode the "shape" of this
+method.
 
 ```text
 * Get items
-* Cut a loaf of bread
-* Verify the loaf's outputs
-* If the loaf provides sufficient materials
-  * Join half of the items with each other
-  * Join the other halves of the items together
-  * Join the two previous steps' outputs together
-* If not, then
-  * Handle an error state
-* Viol&agrave;
+* Process argument 0, a loaf of bread
+  * Determine thickness of each slice
+  * Ensure loaf is thick enough to support 2 slice of the desired size; if not, error
+  * Make cuts
+  * Take two slices and store them as bread1 and bread2
+* Join argument 1 with bread1
+* Join argument 2 with bread2
+* Join the two previous steps' outputs together
+* Violà: All done
 ```
 
-You can easily imagine with another change or two our method would grow to be
-3-5 times its current size!
+Wow! Look at that, to add a little intelligence around working with a loaf
+instead of two slices, our pseudocode lost a lot of its readability! 
+
+Handling the slicing has _just as many steps_ as the previous "shape!" And what if
+argument 0 were pre-sliced bread? We'd have to add more conditional logic..._in
+a method that was about assembling slices_. We've lost perspective of what
+`make_pbj_sandwich()` was about.
 
 We'd like to hide away this new and confusing work that distorts the original
 "shape" of the code. The secret is to use a _subroutine_.
@@ -214,8 +175,9 @@ get_two_slices_from_loaf
 
 4. Identify what inputs are needed to create the output
 
-* a loaf
-* the width
+* a loaf type
+* a loaf width
+* the desired width of each slice
 
 5. Define the procedure’s implementation
 
@@ -227,15 +189,15 @@ get_two_slices_from_loaf
 
 6. Translate the procedure description into code
 
-def get_two_slices_from_loaf(loaf, width)
+def get_two_slices_from_loaf(loaf_type, loaf_width, slice_width)
   slices = []
-  slices_count = loaf.length / slice_width
+  slices_count = loaf_width / slice_width
   slices_count.times do
-    slices << "slice of #{loaf.type}"
+    slices << "slice of #{loaf_type}"
   end
 
   if slices.length >= 2
-    return slice[0,2]
+    return slices[0,2]
   else
     raise ArgumentError, "Could not make enough bread from the loaf!"
     # `raise` makes a program crash with an error
@@ -251,27 +213,26 @@ Let's use this subroutine to return `make_pbj_sandwich` back to its original
 "shape."
 
 ```ruby
-# Required to make the Ruby work.
-require 'ostruct'
-demo_loaf = OpenStruct.new(:type => "light rye", :length => 60)
-# (end GIVEN CODE)
+LOAF_TYPE = "light rye"
+LOAF_WIDTH = 60
 
-def get_two_slices_from_loaf(loaf, width)
+def get_two_slices_from_loaf(loaf_type, loaf_width, slice_width)
   slices = []
-  slices_count = loaf.length / width
+  slices_count = loaf_width / slice_width
   slices_count.times do
-    slices << "slice of #{loaf.type}"
+    slices << "slice of #{loaf_type}"
   end
 
   if slices.length >= 2
     return slices[0,2]
   else
     raise ArgumentError, "Could not make enough bread from the loaf!"
+    # `raise` makes a program crash with an error
   end
 end
 
-def make_pbj_sandwich(loaf, peanut_butter, jelly, slice_width)
-  bread1, bread2 = get_two_slices_from_loaf(loaf, slice_width)
+def make_pbj_sandwich(loaf_type, loaf_width, peanut_butter, jelly, slice_width)
+  bread1, bread2 = get_two_slices_from_loaf(loaf_type, loaf_width, slice_width)
 
   # Join ingredients
   puts "You join #{bread1} and #{peanut_butter}"
@@ -286,7 +247,7 @@ def make_pbj_sandwich(loaf, peanut_butter, jelly, slice_width)
   "A #{peanut_butter} and #{jelly} sandwich"
 end
 
-make_pbj_sandwich(demo_loaf, "crunchy monkey brand peanut butter", "Belgian
+make_pbj_sandwich(LOAF_TYPE, LOAF_WIDTH, "crunchy monkey brand peanut butter", "Belgian
 forest-berry", 2)
 ```
 
@@ -298,8 +259,35 @@ The "shape" of the code has grown by only one line:
 * Join half of the items with each other
 * Join the other halves of the items together
 * Join the two previous steps' outputs together
-* Viol&agrave;
+* Violà
 ```
+
+The method `make_pbj_sandwich` is still focused on assembling slices
+and ingredients. Its "spirit" is unchanged.
+
+> **PRO-TIP**: Experienced developers might suggest that perhaps this
+> method's name would be improved by renaming it to `assemble_finished_ingredients`.
+
+## OPTIONAL: A Call for Classes
+
+This `loaf` instance has _attributes_ (`length` and `type`). You might even see
+some _behaviors_ that you might like the loaf to know how to do to itself. That
+should suggest to you that perhaps a `loaf` is an instance of a `class` of some sort.
+Improve this code to make a `loaf` an instance of a class.
+
+We should be able to say:
+
+```ruby
+bad_for_teeth_loaf = Loaf.new("white sugar insulin shock bread", 50, 4)
+make_pbj_sandwich(bad_for_teeth_loaf, "Mr. Sugar's peanut butter", "tooth-rot surprise jelly")
+```
+
+How might this `Loaf` instance be able to know if it were pre-sliced? How would
+that change your implementation?
+
+Developers are constantly adjusting demo code with silly examples to try to integrate
+concepts. It's not enough to read and it's not enough to code, you have to _explore_
+the code you write.
 
 ## Conclusion
 
