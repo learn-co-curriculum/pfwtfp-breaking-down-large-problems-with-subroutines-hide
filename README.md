@@ -105,7 +105,7 @@ It's "shape" is almost like a To-Do list:
 does" that you can easily keep in your head. Some programmers have called this
 the "theory of the program." Not the syntax, not the words, but
 the..._character_ of the code. Detecting when the "shape" makes a radical
-departure at an _intuitive_ level can be a valuable signal of maybe your
+departure at an _intuitive_ level can be a valuable signal that (maybe) your
 implementation is taking a bad turn.
 
 But now let's suppose the inputs change slightly. For each PBJ, we now get a
